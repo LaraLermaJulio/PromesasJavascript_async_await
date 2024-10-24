@@ -13,43 +13,50 @@ def indexView(request):
 
 
 def postFriend(request):
-    # request should be ajax and method should be POST.
-    if request.is_ajax and request.method == "POST":
-        # get the form data
+    # Verificar si el método es POST
+    if request.method == "POST":
+        # Obtener los datos del formulario
         form = FriendForm(request.POST)
-        # save the data and after fetch the object in instance
+        
+        # Validar el formulario
         if form.is_valid():
+            # Guardar el objeto y obtener la instancia
             instance = form.save()
-            # serialize in new friend object in json
-            ser_instance = serializers.serialize('json', [ instance, ])
-            # send to client side.
+            # Serializar el nuevo amigo en JSON
+            ser_instance = serializers.serialize('json', [instance])
+            # Enviar la respuesta JSON al cliente
             return JsonResponse({"instance": ser_instance}, status=200)
         else:
-            # some form errors occured.
+            # Devolver los errores de formulario
             return JsonResponse({"error": form.errors}, status=400)
 
-    # some error occured
-    return JsonResponse({"error": ""}, status=400)
+    # Si no es un POST
+    return JsonResponse({"error": "Método no permitido"}, status=400)
 
-# BONUS CBV
+
 def checkNickName(request):
-    # request should be ajax and method should be GET.
-    if request.is_ajax and request.method == "GET":
-        # get the nick name from the client side.
+    # Agregar mensajes de depuración
+    print(f"Request method: {request.method}")
+    print(f"Request GET data: {request.GET}")
+
+    # Verificar que sea una solicitud GET
+    if request.method == "GET":
+        # Obtener el nick_name desde la solicitud
         nick_name = request.GET.get("nick_name", None)
-        # check for the nick name in the database.
-        if Friend.objects.filter(nick_name = nick_name).exists():
-            # if nick_name found return not valid new friend
-            return JsonResponse({"valid":False}, status = 200)
-        else:
-            # if nick_name not found, then user can create a new friend.
-            return JsonResponse({"valid":True}, status = 200)
+        print(f"Nick name: {nick_name}")
 
-    return JsonResponse({}, status = 400)
-    
+        if nick_name:
+            # Verificar si el nickname ya existe en la base de datos
+            if Friend.objects.filter(nick_name=nick_name).exists():
+                return JsonResponse({"valid": False}, status=200)
+            else:
+                return JsonResponse({"valid": True}, status=200)
+
+    # Si no se recibe correctamente el nick_name o hay un error en la solicitud
+    return JsonResponse({"error": "Solicitud inválida"}, status=400)
 
 
-
+# Clase FriendView (Class Based View)
 class FriendView(View):
     form_class = FriendForm
     template_name = "index.html"
@@ -58,23 +65,23 @@ class FriendView(View):
         form = self.form_class()
         friends = Friend.objects.all()
         return render(self.request, self.template_name, 
-            {"form": form, "friends": friends})
+                      {"form": form, "friends": friends})
 
     def post(self, *args, **kwargs):
-        # request should be ajax and method should be POST.
-        if self.request.is_ajax and self.request.method == "POST":
-            # get the form data
+        # Verificar que la solicitud sea AJAX y el método sea POST
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' and self.request.method == "POST":
+            # Obtener los datos del formulario
             form = self.form_class(self.request.POST)
-            # save the data and after fetch the object in instance
+            # Guardar los datos y luego obtener la instancia creada
             if form.is_valid():
                 instance = form.save()
-                # serialize in new friend object in json
-                ser_instance = serializers.serialize('json', [ instance, ])
-                # send to client side.
+                # Serializar la nueva instancia en JSON
+                ser_instance = serializers.serialize('json', [instance])
+                # Enviar al lado del cliente
                 return JsonResponse({"instance": ser_instance}, status=200)
             else:
-                # some form errors occured.
+                # Ocurrieron errores en el formulario
                 return JsonResponse({"error": form.errors}, status=400)
 
-        # some error occured
+        # Si algo falla, devolver error
         return JsonResponse({"error": ""}, status=400)

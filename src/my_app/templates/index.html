@@ -12,7 +12,7 @@
                 {{ field }}
             </div>
             {% endfor %}
-
+            
             <div class = "col text-center">
                 <input type="submit" class="btn btn-primary" value="Create Friend" />
             </div>
@@ -57,7 +57,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
     const friendForm = document.getElementById('friend-form');
-
+    
     let isNicknameValid = true; // Variable para controlar si el apodo es válido
 
     async function submitForm(e) {
@@ -92,7 +92,7 @@
             // Limpiar el formulario
             friendForm.reset();
             document.getElementById('id_nick_name').focus();
-
+            
             // Insertar la nueva fila en la tabla
             document.querySelector("#my_friends tbody").insertAdjacentHTML(
                 'afterbegin',
